@@ -69,7 +69,7 @@ export const useStore = create<AppState>((set, get) => ({
     fetchData: async () => {
         set({ isLoading: true, error: null });
         try {
-            const [products, boms, suppliers, ecos, ncrs, capas, auditLogs] = await Promise.all([
+            const results = await Promise.allSettled([
                 productService.getAll(),
                 bomService.getAll(),
                 supplierService.getAll(),
@@ -78,9 +78,37 @@ export const useStore = create<AppState>((set, get) => ({
                 qualityService.getCAPAs(),
                 auditService.getAll(),
             ]);
-            set({ products, boms, suppliers, ecos, ncrs, capas, auditLogs, isLoading: false });
+
+            const [
+                productsResult,
+                bomsResult,
+                suppliersResult,
+                ecosResult,
+                ncrsResult,
+                capasResult,
+                auditLogsResult
+            ] = results;
+
+            set({
+                products: productsResult.status === 'fulfilled' ? productsResult.value : [],
+                boms: bomsResult.status === 'fulfilled' ? bomsResult.value : [],
+                suppliers: suppliersResult.status === 'fulfilled' ? suppliersResult.value : [],
+                ecos: ecosResult.status === 'fulfilled' ? ecosResult.value : [],
+                ncrs: ncrsResult.status === 'fulfilled' ? ncrsResult.value : [],
+                capas: capasResult.status === 'fulfilled' ? capasResult.value : [],
+                auditLogs: auditLogsResult.status === 'fulfilled' ? auditLogsResult.value : [],
+                isLoading: false,
+            });
+
+            // Log errors for any failed requests
+            results.forEach((result, index) => {
+                if (result.status === 'rejected') {
+                    console.error(`Failed to fetch data for index ${index}:`, result.reason);
+                }
+            });
+
         } catch (error: any) {
-            console.error('Failed to fetch data:', error);
+            console.error('Critical failure in fetchData:', error);
             set({ error: error.message, isLoading: false });
         }
     },
