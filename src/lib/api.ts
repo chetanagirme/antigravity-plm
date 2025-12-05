@@ -46,4 +46,9 @@ export const qualityService = {
     createCAPA: (capa: CAPA) => api.post<CAPA>('/quality/capas', capa).then(res => res.data),
 };
 
+export const auditService = {
+    getAll: () => api.get('/audit').then(res => res.data),
+    log: (entry: any) => api.post('/audit', entry).then(res => res.data),
+};
+
 export default api;

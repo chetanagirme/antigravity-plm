@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { type Product, type BOM, type Supplier, type User, type Role, type AuditLog, type ECO, type NCR, type CAPA, type Attachment } from '../types';
-import { productService, bomService, supplierService, ecoService, qualityService } from '../lib/api';
+import { productService, bomService, supplierService, ecoService, qualityService, auditService } from '../lib/api';
 
 interface AppState {
     isLoading: boolean;
@@ -39,9 +39,9 @@ interface AppState {
     addCAPA: (capa: CAPA) => Promise<void>;
     updateCAPA: (id: string, capa: Partial<CAPA>) => Promise<void>;
 
-    // Attachments (Mock for now, or implement file upload API later)
-    addAttachment: (productId: string, attachment: Attachment) => void;
-    deleteAttachment: (productId: string, attachmentId: string) => void;
+    // Attachments
+    addAttachment: (productId: string, attachment: Attachment) => Promise<void>;
+    deleteAttachment: (productId: string, attachmentId: string) => Promise<void>;
 
     currentUser: User | null;
     isAuthenticated: boolean;
@@ -69,15 +69,16 @@ export const useStore = create<AppState>((set, get) => ({
     fetchData: async () => {
         set({ isLoading: true, error: null });
         try {
-            const [products, boms, suppliers, ecos, ncrs, capas] = await Promise.all([
+            const [products, boms, suppliers, ecos, ncrs, capas, auditLogs] = await Promise.all([
                 productService.getAll(),
                 bomService.getAll(),
                 supplierService.getAll(),
                 ecoService.getAll(),
                 qualityService.getNCRs(),
                 qualityService.getCAPAs(),
+                auditService.getAll(),
             ]);
-            set({ products, boms, suppliers, ecos, ncrs, capas, isLoading: false });
+            set({ products, boms, suppliers, ecos, ncrs, capas, auditLogs, isLoading: false });
         } catch (error: any) {
             console.error('Failed to fetch data:', error);
             set({ error: error.message, isLoading: false });
@@ -263,13 +264,41 @@ export const useStore = create<AppState>((set, get) => ({
         }));
     },
 
-    // Attachments (Client-side only for now)
-    addAttachment: (productId, attachment) => set((state) => ({
-        products: state.products.map(p => p.id === productId ? { ...p, attachments: [...(p.attachments || []), attachment] } : p),
-    })),
-    deleteAttachment: (productId, attachmentId) => set((state) => ({
-        products: state.products.map(p => p.id === productId ? { ...p, attachments: p.attachments?.filter(a => a.id !== attachmentId) } : p),
-    })),
+    // Attachments
+    addAttachment: async (productId, attachment) => {
+        const state = get();
+        const product = state.products.find(p => p.id === productId);
+        if (!product) return;
+
+        const newAttachments = [...(product.attachments || []), attachment];
+
+        try {
+            await productService.update(productId, { attachments: newAttachments });
+            set((state) => ({
+                products: state.products.map(p => p.id === productId ? { ...p, attachments: newAttachments } : p),
+            }));
+            get().logAction('ADD_ATTACHMENT', `Added attachment to ${product.name}: ${attachment.name}`);
+        } catch (error) {
+            console.error('Failed to add attachment:', error);
+        }
+    },
+    deleteAttachment: async (productId, attachmentId) => {
+        const state = get();
+        const product = state.products.find(p => p.id === productId);
+        if (!product) return;
+
+        const newAttachments = product.attachments?.filter(a => a.id !== attachmentId) || [];
+
+        try {
+            await productService.update(productId, { attachments: newAttachments });
+            set((state) => ({
+                products: state.products.map(p => p.id === productId ? { ...p, attachments: newAttachments } : p),
+            }));
+            get().logAction('DELETE_ATTACHMENT', `Deleted attachment from ${product.name}`);
+        } catch (error) {
+            console.error('Failed to delete attachment:', error);
+        }
+    },
 
     login: (email, role) => set({
         isAuthenticated: true,
@@ -283,8 +312,10 @@ export const useStore = create<AppState>((set, get) => ({
     }),
     logout: () => set({ isAuthenticated: false, currentUser: null }),
 
-    logAction: (action, details) => set((state) => {
-        if (!state.currentUser) return {};
+    logAction: async (action, details) => {
+        const state = get();
+        if (!state.currentUser) return;
+
         const newLog: AuditLog = {
             id: crypto.randomUUID(),
             userId: state.currentUser.id,
@@ -293,6 +324,12 @@ export const useStore = create<AppState>((set, get) => ({
             details,
             timestamp: new Date().toISOString(),
         };
-        return { auditLogs: [newLog, ...state.auditLogs] };
-    }),
+
+        try {
+            await auditService.log(newLog);
+            set((state) => ({ auditLogs: [newLog, ...state.auditLogs] }));
+        } catch (error) {
+            console.error('Failed to save audit log:', error);
+        }
+    },
 }));
