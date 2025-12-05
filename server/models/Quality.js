@@ -2,7 +2,6 @@ const mongoose = require('mongoose');
 
 const ncrSchema = new mongoose.Schema({
     id: { type: String, required: true, unique: true },
-    // title: { type: String, required: true }, // Removed as frontend doesn't send title
     description: String,
     productId: String,
     supplierId: String,
