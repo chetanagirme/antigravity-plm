@@ -4,10 +4,13 @@ import { ArrowLeft, Save } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { type NCR, type NCRSeverity, type NCRStatus } from '../types';
 
+import { useToast } from '../context/ToastContext';
+
 const NCREditor = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { ncrs, products, addNCR, updateNCR, currentUser } = useStore();
+    const { success, error } = useToast();
     const isEditing = Boolean(id);
 
     const [formData, setFormData] = useState<Partial<NCR>>({
@@ -26,23 +29,31 @@ const NCREditor = () => {
         }
     }, [isEditing, id, ncrs]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const now = new Date().toISOString();
 
-        if (isEditing && id) {
-            updateNCR(id, { ...formData, updatedAt: now });
-        } else {
-            if (!currentUser) return;
-            addNCR({
-                ...formData,
-                id: crypto.randomUUID(),
-                reportedBy: currentUser.id,
-                createdAt: now,
-                updatedAt: now,
-            } as NCR);
+        try {
+            if (isEditing && id) {
+                await updateNCR(id, { ...formData, updatedAt: now });
+                success('NCR updated successfully');
+            } else {
+                if (!currentUser) return;
+                await addNCR({
+                    ...formData,
+                    id: crypto.randomUUID(),
+                    reportedBy: currentUser.id,
+                    createdAt: now,
+                    updatedAt: now,
+                } as NCR);
+                success('NCR reported successfully');
+            }
+            navigate('/quality');
+        } catch (err: any) {
+            console.error('Error saving NCR:', err);
+            const errorMessage = err.response?.data?.message || err.message || 'Failed to save NCR';
+            error(errorMessage);
         }
-        navigate('/quality');
     };
 
     return (

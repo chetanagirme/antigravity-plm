@@ -4,10 +4,13 @@ import { ArrowLeft, Save, Send, CheckCircle, XCircle, Trash2 } from 'lucide-reac
 import { useStore } from '../store/useStore';
 import { type ECO, type ECOPriority, type ECOStatus } from '../types';
 
+import { useToast } from '../context/ToastContext';
+
 const ECOEditor = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
     const { ecos, products, addECO, updateECO, deleteECO, currentUser } = useStore();
+    const { success, error } = useToast();
     const isEditing = Boolean(id);
 
     const [formData, setFormData] = useState<Partial<ECO>>({
@@ -27,23 +30,31 @@ const ECOEditor = () => {
         }
     }, [isEditing, id, ecos]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const now = new Date().toISOString();
 
-        if (isEditing && id) {
-            updateECO(id, { ...formData, updatedAt: now });
-        } else {
-            if (!currentUser) return;
-            addECO({
-                ...formData,
-                id: crypto.randomUUID(),
-                initiatorId: currentUser.id,
-                createdAt: now,
-                updatedAt: now,
-            } as ECO);
+        try {
+            if (isEditing && id) {
+                await updateECO(id, { ...formData, updatedAt: now });
+                success('ECO updated successfully');
+            } else {
+                if (!currentUser) return;
+                await addECO({
+                    ...formData,
+                    id: crypto.randomUUID(),
+                    initiatorId: currentUser.id,
+                    createdAt: now,
+                    updatedAt: now,
+                } as ECO);
+                success('ECO created successfully');
+            }
+            navigate('/ecos');
+        } catch (err: any) {
+            console.error('Error saving ECO:', err);
+            const errorMessage = err.response?.data?.message || err.message || 'Failed to save ECO';
+            error(errorMessage);
         }
-        navigate('/ecos');
     };
 
     const handleStatusChange = (newStatus: ECOStatus) => {
