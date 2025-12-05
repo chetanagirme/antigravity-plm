@@ -91,6 +91,7 @@ export const useStore = create<AppState>((set, get) => ({
             get().logAction('CREATE_PRODUCT', `Created product: ${product.name}`);
         } catch (error: any) {
             console.error('Failed to add product:', error);
+            throw error;
         }
     },
     updateProduct: async (id, product) => {
@@ -102,6 +103,7 @@ export const useStore = create<AppState>((set, get) => ({
             get().logAction('UPDATE_PRODUCT', `Updated product: ${id}`);
         } catch (error: any) {
             console.error('Failed to update product:', error);
+            throw error;
         }
     },
     deleteProduct: async (id) => {
@@ -113,6 +115,7 @@ export const useStore = create<AppState>((set, get) => ({
             get().logAction('DELETE_PRODUCT', `Deleted product: ${id}`);
         } catch (error: any) {
             console.error('Failed to delete product:', error);
+            throw error;
         }
     },
 

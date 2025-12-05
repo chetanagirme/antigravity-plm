@@ -31,17 +31,17 @@ const ProductEditor = () => {
         }
     }, [isEditing, id, products]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
         if (!currentUser) return;
 
         try {
             if (isEditing && id) {
-                updateProduct(id, formData);
+                await updateProduct(id, formData);
                 success('Product updated successfully');
             } else {
-                addProduct({
+                await addProduct({
                     ...formData,
                 } as Product);
                 success('Product created successfully');
