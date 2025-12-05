@@ -48,7 +48,10 @@ const NCREditor = () => {
                 await updateNCR(id, { ...formData, updatedAt: now });
                 success('NCR updated successfully');
             } else {
-                if (!currentUser) return;
+                if (!currentUser) {
+                    error('You must be logged in to report an NCR');
+                    return;
+                }
                 await addNCR({
                     ...formData,
                     id: crypto.randomUUID(),
