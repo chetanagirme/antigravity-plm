@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, Search, Filter, Edit, Trash2, Eye, Truck, Mail, Phone, MapPin } from 'lucide-react';
+import { Plus, Search, Filter, Edit, Trash2, Truck, Mail, Phone, MapPin } from 'lucide-react';
 import { useStore } from '../store/useStore';
 import { Link } from 'react-router-dom';
 

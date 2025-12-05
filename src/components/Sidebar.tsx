@@ -1,6 +1,6 @@
 
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Package, Layers, Users, Settings, LogOut, History, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Package, Layers, Users, LogOut, History, BarChart3 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useStore } from '../store/useStore';
 

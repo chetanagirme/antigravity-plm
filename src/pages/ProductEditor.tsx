@@ -42,9 +42,8 @@ const ProductEditor = () => {
                 success('Product updated successfully');
             } else {
                 addProduct({
-                    ...formData as Omit<Product, 'id' | 'createdAt' | 'updatedAt' | 'createdBy'>,
-                    createdBy: currentUser.id,
-                });
+                    ...formData,
+                } as Product);
                 success('Product created successfully');
             }
             navigate('/products');
