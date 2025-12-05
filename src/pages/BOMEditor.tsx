@@ -29,6 +29,14 @@ const BOMEditor = () => {
             if (bom) {
                 setFormData(bom);
             }
+        } else {
+            setFormData({
+                name: '',
+                productId: '',
+                version: '1.0',
+                status: 'Draft',
+                components: [],
+            });
         }
     }, [isEditing, id, boms]);
 

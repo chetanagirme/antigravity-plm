@@ -27,6 +27,14 @@ const SupplierEditor = () => {
             if (supplier) {
                 setFormData(supplier);
             }
+        } else {
+            setFormData({
+                name: '',
+                contactName: '',
+                email: '',
+                phone: '',
+                address: '',
+            });
         }
     }, [isEditing, id, suppliers]);
 

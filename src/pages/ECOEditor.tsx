@@ -27,6 +27,14 @@ const ECOEditor = () => {
             if (eco) {
                 setFormData(eco);
             }
+        } else {
+            setFormData({
+                title: '',
+                description: '',
+                productIds: [],
+                priority: 'Medium',
+                status: 'Draft',
+            });
         }
     }, [isEditing, id, ecos]);
 

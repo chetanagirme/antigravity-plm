@@ -28,6 +28,16 @@ const ProductEditor = () => {
             if (product) {
                 setFormData(product);
             }
+        } else {
+            setFormData({
+                name: '',
+                sku: '',
+                description: '',
+                cost: 0,
+                price: 0,
+                status: 'Draft',
+                category: 'Electronics',
+            });
         }
     }, [isEditing, id, products]);
 

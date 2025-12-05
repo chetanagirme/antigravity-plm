@@ -29,8 +29,15 @@ const NCREditor = () => {
             if (ncr) {
                 setFormData(ncr);
             }
+        } else {
+            setFormData({
+                productId: prefillProductId,
+                description: '',
+                severity: 'Medium',
+                status: 'Open',
+            });
         }
-    }, [isEditing, id, ncrs]);
+    }, [isEditing, id, ncrs, prefillProductId]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
